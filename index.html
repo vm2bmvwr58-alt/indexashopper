@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indexa — Digitale planners, journals & templates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFFFFF;
+    --ink:#15171A;
+    --sage:#EDEDED;
+    --sage-deep:#D8D8D8;
+    --clay:#15171A;
+    --sand:#F4F4F4;
+    --line:rgba(21,23,26,0.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Archivo', sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono', monospace; letter-spacing:0.04em;}
+  a{color:inherit; text-decoration:none;}
+  img{display:block; max-width:100%;}
+
+  /* ===== TOP BAR ===== */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 5vw; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:var(--cream); z-index:100;
+  }
+  .logo{font-size:1.6rem; font-weight:900; letter-spacing:-0.02em; text-transform:uppercase;}
+  .topbar-icons{display:flex; gap:24px; align-items:center; font-size:1.1rem;}
+  .topbar-icons .bag{
+    display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono'; font-size:0.85rem;
+    border:1px solid var(--ink); border-radius:999px; padding:6px 14px;
+    transition:background 0.2s, color 0.2s;
+  }
+  .topbar-icons .bag:hover{background:var(--ink); color:var(--cream);}
+  .topbar-icons span:hover{color:var(--clay);}
+
+  .search-bar{
+    flex:1; max-width:420px; margin:0 24px; overflow:hidden;
+    max-height:0; transition:max-height 0.25s ease;
+  }
+  .search-bar.open{max-height:60px;}
+  .search-bar input{
+    width:100%; padding:12px 16px; border:1px solid var(--line); border-radius:999px;
+    background:var(--sand); font-family:'Archivo', sans-serif; font-size:0.95rem; color:var(--ink);
+  }
+  .search-bar input:focus{outline:none; border-color:var(--clay);}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:var(--cream); padding:14px 26px; border-radius:999px;
+    font-family:'JetBrains Mono'; font-size:0.85rem; letter-spacing:0.04em;
+    opacity:0; pointer-events:none; transition:opacity 0.25s, transform 0.25s; z-index:1000;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .pcard{cursor:pointer; transition:transform 0.15s;}
+  .pcard:hover{transform:translateY(-4px);}
+  .pcard:active{transform:translateY(-1px) scale(0.98);}
+  .pcard.hidden{display:none;}
+  .catsection-head .count.no-results{color:var(--clay);}
+
+  /* ===== CATEGORY NAV ===== */
+  .catnav{
+    display:flex; gap:0; overflow-x:auto; border-bottom:1px solid var(--line);
+    background:var(--cream); position:sticky; top:65px; z-index:99;
+  }
+  .catnav a{
+    padding:16px 5vw 16px 0;
+    margin-left:5vw;
+    font-size:1.05rem; font-weight:500; white-space:nowrap;
+    border-bottom:3px solid transparent;
+    transition:border-color 0.2s, color 0.2s;
+  }
+  .catnav a:first-child{margin-left:5vw;}
+  .catnav a.active, .catnav a:hover{border-color:var(--clay); color:var(--clay);}
+
+  /* ===== HERO ===== */
+  .hero{
+    position:relative; height:78vh; min-height:520px; overflow:hidden;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-bg{
+    position:absolute; inset:0;
+    background:
+      linear-gradient(180deg, rgba(21,23,26,0.05), rgba(21,23,26,0.35) 85%),
+      linear-gradient(135deg, var(--sage) 0%, var(--sand) 55%, var(--clay) 100%);
+  }
+  .hero-bg::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.10) 0 2px, transparent 2px 60px);
+  }
+  .hero-shapes{position:absolute; inset:0;}
+  .blob{
+    position:absolute; border-radius:50%; filter:blur(2px); opacity:0.85;
+  }
+  .blob1{width:46vw; height:46vw; background:var(--sage-deep); top:-12vw; left:-10vw;}
+  .blob2{width:60vw; height:60vw; background:var(--ink); opacity:0.18; bottom:-30vw; right:-15vw; border-radius:40% 60% 55% 45%;}
+  .blob3{width:24vw; height:24vw; background:var(--cream); opacity:0.5; top:30%; right:8%; border-radius:38% 62% 60% 40%;}
+
+  .hero-cta{
+    position:absolute; left:6vw; bottom:60px;
+    background:var(--cream); color:var(--ink);
+    display:flex; align-items:center; justify-content:space-between;
+    gap:40px; padding:26px 36px; min-width:320px;
+    box-shadow:0 20px 50px rgba(21,23,26,0.25);
+  }
+  .hero-cta span{font-size:1.3rem; font-weight:600;}
+  .hero-cta .arrow{font-size:1.4rem;}
+  .hero-title{
+    position:absolute; top:48px; left:6vw; right:6vw;
+    font-size:clamp(2.6rem, 7vw, 6rem); font-weight:900; line-height:0.98;
+    color:var(--cream); letter-spacing:-0.02em; max-width:14ch;
+  }
+
+  /* ===== INTRO ===== */
+  .intro{
+    text-align:center; padding:110px 8vw 90px; border-bottom:1px solid var(--line);
+  }
+  .intro h2{
+    font-size:clamp(2.4rem, 6vw, 4.2rem); font-weight:900; letter-spacing:-0.02em; margin-bottom:18px;
+  }
+  .intro h2 .accent{color:var(--clay);}
+  .intro p{
+    font-size:clamp(1.2rem, 2.6vw, 1.7rem); color:#6c6f73; max-width:760px; margin:0 auto;
+    font-weight:500;
+  }
+
+  /* ===== FEATURED PRODUCT STRIP ===== */
+  .strip{
+    display:flex; gap:24px; padding:0 5vw 110px; overflow-x:auto; border-bottom:1px solid var(--line);
+  }
+  .pcard{
+    flex:0 0 240px; display:flex; flex-direction:column; gap:14px;
+  }
+  .pcard .thumb{
+    aspect-ratio:3/4; border-radius:6px; position:relative; overflow:hidden;
+    display:flex; align-items:flex-end; padding:16px;
+    border:1px solid var(--line);
+  }
+  .pcard .thumb .tag{
+    background:var(--cream); font-family:'JetBrains Mono'; font-size:0.7rem; letter-spacing:0.1em;
+    padding:6px 10px; text-transform:uppercase;
+  }
+  .pcard h4{font-size:1.05rem; font-weight:700;}
+  .pcard .meta{font-family:'JetBrains Mono'; font-size:0.8rem; color:#6c6f73; display:flex; justify-content:space-between;}
+
+  .t-sage{background:var(--sand); border:1px solid var(--line);}
+  .t-clay{background:var(--sage-deep);}
+  .t-ink{background:linear-gradient(160deg, #3a3d42, var(--ink));}
+  .t-sand{background:#fff; border:1px solid var(--line);}
+  .t-sagedeep{background:var(--sage);}
+
+  /* ===== CATALOG SECTIONS (stacked / sticky) ===== */
+  .catsection{
+    position:sticky; top:130px;
+    scroll-margin-top:130px;
+    border-top:1px solid var(--line);
+    background:var(--cream);
+    min-height:100vh;
+    padding:70px 5vw 90px;
+    display:flex; flex-direction:column;
+    box-shadow:0 -20px 60px rgba(21,23,26,0.08);
+  }
+  .funfact{
+    font-family:'JetBrains Mono'; font-size:0.85rem; color:var(--clay);
+    background:var(--sand); border:1px solid var(--line); border-radius:8px;
+    padding:14px 18px; margin-top:24px; max-width:520px; line-height:1.5;
+  }
+  .funfact b{color:var(--ink);}
+  .catsection-head{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:30px; flex-wrap:wrap;
+    margin-bottom:48px; padding-bottom:30px; border-bottom:1px solid var(--line);
+  }
+  .catsection-head .num{
+    font-family:'JetBrains Mono'; font-size:0.85rem; letter-spacing:0.15em; color:var(--clay); margin-bottom:10px; display:block;
+  }
+  .catsection-head h2{font-size:clamp(2.4rem, 6vw, 4.4rem); font-weight:900; letter-spacing:-0.02em;}
+  .catsection-head .count{font-family:'JetBrains Mono'; font-size:0.9rem; color:#6c6f73;}
+  .catsection-head p{max-width:480px; color:#6c6f73; font-size:1.05rem; margin-top:10px;}
+
+  .product-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:24px;
+  }
+  .product-grid .pcard .thumb{aspect-ratio:1/1;}
+
+  /* ===== SYSTEM ===== */
+  .system{
+    position:relative; z-index:20; background:var(--ink); color:var(--cream);
+    padding:110px 5vw; border-top:1px solid var(--line);
+  }
+  .system h2{font-size:clamp(2.4rem,6vw,4.2rem); font-weight:900; letter-spacing:-0.02em; max-width:14ch; margin-bottom:60px;}
+  .system h2 .accent{color:var(--sage);}
+  .system-steps{display:grid; grid-template-columns:repeat(4,1fr); gap:24px;}
+  .step{border-top:2px solid var(--sage); padding-top:20px;}
+  .step .n{font-family:'JetBrains Mono'; font-size:0.85rem; color:var(--sage); margin-bottom:10px;}
+  .step h4{font-size:1.3rem; font-weight:700; margin-bottom:10px;}
+  .step p{color:#aeb1b6; font-size:0.95rem;}
+  .system-result{
+    margin-top:70px; padding-top:50px; border-top:1px solid rgba(255,255,255,0.12);
+    display:flex; gap:40px; align-items:center; flex-wrap:wrap;
+  }
+  .system-result .big{font-size:clamp(2.8rem,7vw,5.5rem); font-weight:900; color:var(--clay);}
+  .system-result p{color:#aeb1b6; max-width:460px; font-size:1.05rem;}
+
+  /* ===== ABOUT ===== */
+  .about{
+    position:relative; z-index:20; background:var(--cream);
+    padding:110px 5vw; display:grid; grid-template-columns:1fr 1.3fr; gap:70px; border-top:1px solid var(--line);
+  }
+  .about-visual{
+    aspect-ratio:4/5; border-radius:6px; position:relative; overflow:hidden;
+    background:linear-gradient(150deg, var(--sage), var(--clay) 120%);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .about-visual::before{
+    content:""; position:absolute; inset:0;
+    background-image: repeating-linear-gradient(115deg, rgba(255,255,255,0.12) 0 2px, transparent 2px 50px);
+  }
+  .about-visual span{font-size:8rem; font-weight:900; color:var(--cream); position:relative;}
+  .about-text .num{font-family:'JetBrains Mono'; font-size:0.85rem; letter-spacing:0.15em; color:var(--clay); margin-bottom:14px; display:block;}
+  .about-text h2{font-size:clamp(2.2rem,5vw,3.6rem); font-weight:900; margin-bottom:24px; letter-spacing:-0.02em;}
+  .about-text p{color:#6c6f73; font-size:1.1rem; max-width:560px; margin-bottom:16px;}
+  .about-pills{display:flex; gap:10px; flex-wrap:wrap; margin-top:24px;}
+  .about-pills span{
+    border:1px solid var(--ink); border-radius:999px; padding:8px 18px;
+    font-family:'JetBrains Mono'; font-size:0.78rem; letter-spacing:0.08em;
+  }
+
+  /* ===== PRICING ===== */
+  .pricing{
+    position:relative; z-index:20; background:var(--cream); border-top:1px solid var(--line);
+    padding:110px 5vw;
+  }
+  .pricing-head{margin-bottom:60px;}
+  .pricing-head .num{font-family:'JetBrains Mono'; font-size:0.85rem; letter-spacing:0.15em; color:var(--clay); margin-bottom:14px; display:block;}
+  .pricing-head h2{font-size:clamp(2.4rem,6vw,4.2rem); font-weight:900; letter-spacing:-0.02em; max-width:16ch;}
+  .pricing-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .plan{background:var(--cream); padding:40px; display:flex; flex-direction:column;}
+  .plan.featured{background:var(--ink); color:var(--cream);}
+  .plan h3{font-size:1.4rem; font-weight:800; margin-bottom:6px;}
+  .plan .desc{color:#6c6f73; font-size:0.92rem; margin-bottom:30px;}
+  .plan.featured .desc{color:#aeb1b6;}
+  .plan .price{font-size:2.8rem; font-weight:900; margin-bottom:6px;}
+  .plan .price span{font-size:1rem; font-weight:500; color:#6c6f73;}
+  .plan.featured .price span{color:#aeb1b6;}
+  .plan ul{list-style:none; margin:24px 0; font-size:0.92rem; flex-grow:1;}
+  .plan li{padding:9px 0; border-bottom:1px solid var(--line); display:flex; gap:10px;}
+  .plan.featured li{border-color:rgba(255,255,255,0.12); color:#dfe1e3;}
+  .plan li::before{content:"+"; color:var(--clay); font-weight:900;}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    padding:16px; font-weight:700; font-size:0.95rem; border:1px solid var(--ink); margin-top:10px;
+    transition:background 0.2s, color 0.2s;
+  }
+  .btn:hover{background:var(--ink); color:var(--cream);}
+  .plan.featured .btn{border-color:var(--clay); background:var(--clay); color:var(--cream);}
+  .plan.featured .btn:hover{background:transparent; color:var(--clay);}
+
+  /* ===== FOOTER ===== */
+  footer{
+    position:relative; z-index:20; background:var(--ink); color:var(--cream);
+    padding:90px 5vw 40px; border-top:1px solid var(--line);
+  }
+  footer h2{font-size:clamp(2.4rem,6vw,5rem); font-weight:900; letter-spacing:-0.02em; margin-bottom:50px; max-width:14ch;}
+  .footer-bottom{
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:16px;
+    border-top:1px solid rgba(255,255,255,0.12); padding-top:24px;
+    font-family:'JetBrains Mono'; font-size:0.78rem; letter-spacing:0.06em; color:#aeb1b6;
+  }
+
+  @media(max-width:900px){
+    .catnav{top:60px;}
+    .hero{height:90vh;}
+    .system-steps{grid-template-columns:1fr 1fr;}
+    .about{grid-template-columns:1fr;}
+    .catsection{padding:50px 6vw 70px;}
+  }
+  @media(max-width:560px){
+    .system-steps{grid-template-columns:1fr;}
+    .hero-cta{left:4vw; right:4vw; min-width:auto;}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none !important;}}
+  :focus-visible{outline:2px solid var(--clay); outline-offset:2px;}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="logo"><a href="#top" style="cursor:pointer;">Indexa</a></div>
+    <div class="search-bar" id="searchBar">
+      <input type="text" id="searchInput" placeholder="Zoek een planner, journal of template..." autocomplete="off">
+    </div>
+    <div class="topbar-icons">
+      <span aria-hidden="true" id="searchToggle" style="cursor:pointer;">⌕</span>
+      <span aria-hidden="true" id="printBtn" style="cursor:pointer;">⎙</span>
+      <div class="bag" id="bag" style="cursor:pointer;">Mandje (0)</div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <nav class="catnav">
+    <a href="#planners" class="active">Planners</a>
+    <a href="#budget">Budget &amp; Geld</a>
+    <a href="#gezondheid">Gezondheid</a>
+    <a href="#journals">Journals</a>
+    <a href="#ondernemen">Ondernemen</a>
+    <a href="#ai">AI-producten</a>
+    <a href="#canva">Canva</a>
+    <a href="#notion">Notion</a>
+    <a href="#familie">Familie</a>
+    <a href="#printables">Printables</a>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-shapes">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="blob blob3"></div>
+    </div>
+    <div class="hero-title" id="top">Plan je leven. Mooi.</div>
+    <a href="#planners" class="hero-cta" style="cursor:pointer;">
+      <span>Shop de catalogus</span>
+      <span class="arrow">→</span>
+    </a>
+  </div>
+
+  <section class="intro">
+    <h2>Dit is <span class="accent">Indexa</span>,</h2>
+    <p>hier krijg je weer overzicht over je leven — met 100 digitale planners, journals, budgetten en templates in één strakke, samenhangende stijl.</p>
+  </section>
+
+  <div class="strip">
+    <div class="pcard">
+      <div class="thumb t-sage"><span class="tag">Planner · Week</span></div>
+      <h4>Weekplanner — Minimalist</h4>
+      <div class="meta"><span>PDF + Notion</span><span>€4,95</span></div>
+    </div>
+    <div class="pcard">
+      <div class="thumb t-clay"><span class="tag">Budget · NL</span></div>
+      <h4>Maandbudget Planner</h4>
+      <div class="meta"><span>PDF + Sheets</span><span>€4,95</span></div>
+    </div>
+    <div class="pcard">
+      <div class="thumb t-ink"><span class="tag">Journal</span></div>
+      <h4>Dankbaarheidsjournal</h4>
+      <div class="meta"><span>PDF print</span><span>€3,95</span></div>
+    </div>
+    <div class="pcard">
+      <div class="thumb t-sand"><span class="tag">AI · Prompts</span></div>
+      <h4>ChatGPT Prompts — Ondernemers</h4>
+      <div class="meta"><span>PDF</span><span>€6,95</span></div>
+    </div>
+    <div class="pcard">
+      <div class="thumb t-sagedeep"><span class="tag">Notion</span></div>
+      <h4>Life Dashboard</h4>
+      <div class="meta"><span>Notion-link</span><span>€7,95</span></div>
+    </div>
+  </div>
+
+  <section class="catsection" id="planners" style="z-index:10;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">01 / 10</span>
+        <h2>Planners</h2>
+        <p>Dag-, week-, maand- en jaarplanners — ook voor studenten, gezinnen, focus en routines.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Mensen die elke dag plannen, voltooien gemiddeld 30% meer taken dan mensen die niet plannen.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Dagplanner</h4><div class="meta"><span>PDF</span><span>€3,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Dagplanner — NL</h4><div class="meta"><span>PDF</span><span>€5,06</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Dagplanner — EN</h4><div class="meta"><span>PDF</span><span>€6,17</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Dagplanner — Pink</h4><div class="meta"><span>PDF</span><span>€4,28</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Dagplanner — Minimalist</h4><div class="meta"><span>PDF</span><span>€5,39</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Dagplanner — Student</h4><div class="meta"><span>PDF</span><span>€6,50</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Dagplanner — Family</h4><div class="meta"><span>PDF</span><span>€4,61</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Dagplanner — Business</h4><div class="meta"><span>PDF</span><span>€5,72</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Weekplanner</h4><div class="meta"><span>PDF</span><span>€6,83</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Weekplanner — NL</h4><div class="meta"><span>PDF</span><span>€4,94</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="budget" style="z-index:11;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">02 / 10</span>
+        <h2>Budget &amp; Geld</h2>
+        <p>Grip op je geld — budgetteren, sparen, schulden afbouwen en beleggen volgen.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Huishoudens die hun uitgaven bijhouden, geven gemiddeld 10-15% minder uit aan impulsaankopen.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Budgetplanner</h4><div class="meta"><span>PDF</span><span>€3,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Budgetplanner — NL</h4><div class="meta"><span>PDF</span><span>€5,06</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Budgetplanner — EN</h4><div class="meta"><span>PDF</span><span>€6,17</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Budgetplanner — Pink</h4><div class="meta"><span>PDF</span><span>€4,28</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Budgetplanner — Minimalist</h4><div class="meta"><span>PDF</span><span>€5,39</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Budgetplanner — Student</h4><div class="meta"><span>PDF</span><span>€6,50</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Budgetplanner — Family</h4><div class="meta"><span>PDF</span><span>€4,61</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Budgetplanner — Business</h4><div class="meta"><span>PDF</span><span>€5,72</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Spaarplanner</h4><div class="meta"><span>PDF</span><span>€6,83</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Spaarplanner — NL</h4><div class="meta"><span>PDF</span><span>€4,94</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="gezondheid" style="z-index:12;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">03 / 10</span>
+        <h2>Gezondheid</h2>
+        <p>Fitness, slaap, voeding en gewoonten — trackers om je gezondheid in beeld te houden.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Het bijhouden van je water- en slaapgewoontes verhoogt de kans dat je ze daadwerkelijk verbetert.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Fitness tracker</h4><div class="meta"><span>PDF</span><span>€2,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Fitness tracker — NL</h4><div class="meta"><span>PDF</span><span>€3,69</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Fitness tracker — EN</h4><div class="meta"><span>PDF</span><span>€4,43</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Fitness tracker — Pink</h4><div class="meta"><span>PDF</span><span>€3,17</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Fitness tracker — Minimalist</h4><div class="meta"><span>PDF</span><span>€3,91</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Fitness tracker — Student</h4><div class="meta"><span>PDF</span><span>€4,65</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Fitness tracker — Family</h4><div class="meta"><span>PDF</span><span>€3,39</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Fitness tracker — Business</h4><div class="meta"><span>PDF</span><span>€4,13</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Hardloopschema</h4><div class="meta"><span>PDF</span><span>€4,87</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Hardloopschema — NL</h4><div class="meta"><span>PDF</span><span>€3,61</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="journals" style="z-index:13;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">04 / 10</span>
+        <h2>Journals</h2>
+        <p>Dankbaarheid, reflectie en manifestatie — journals voor meer rust in je hoofd.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Drie dingen opschrijven waar je dankbaar voor bent, verbetert meetbaar je stemming binnen twee weken.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Dankbaarheidsjournal</h4><div class="meta"><span>PDF</span><span>€3,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Dankbaarheidsjournal — NL</h4><div class="meta"><span>PDF</span><span>€5,06</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Dankbaarheidsjournal — EN</h4><div class="meta"><span>PDF</span><span>€6,17</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Dankbaarheidsjournal — Pink</h4><div class="meta"><span>PDF</span><span>€4,28</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Dankbaarheidsjournal — Minimalist</h4><div class="meta"><span>PDF</span><span>€5,39</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Dankbaarheidsjournal — Student</h4><div class="meta"><span>PDF</span><span>€6,50</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Dankbaarheidsjournal — Family</h4><div class="meta"><span>PDF</span><span>€4,61</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Dankbaarheidsjournal — Business</h4><div class="meta"><span>PDF</span><span>€5,72</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Manifestatiejournal</h4><div class="meta"><span>PDF</span><span>€6,83</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Manifestatiejournal — NL</h4><div class="meta"><span>PDF</span><span>€4,94</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="ondernemen" style="z-index:14;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">05 / 10</span>
+        <h2>Ondernemen</h2>
+        <p>CRM, marketing en contentplanning — tools om je onderneming te runnen.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Startende ondernemers met een geschreven businessplan halen vaker hun eerste jaardoelen.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Business planner</h4><div class="meta"><span>PDF</span><span>€4,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Business planner — NL</h4><div class="meta"><span>PDF</span><span>€6,43</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Business planner — EN</h4><div class="meta"><span>PDF</span><span>€7,91</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Business planner — Pink</h4><div class="meta"><span>PDF</span><span>€5,39</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Business planner — Minimalist</h4><div class="meta"><span>PDF</span><span>€6,87</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Business planner — Student</h4><div class="meta"><span>PDF</span><span>€8,35</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Business planner — Family</h4><div class="meta"><span>PDF</span><span>€5,83</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Business planner — Business</h4><div class="meta"><span>PDF</span><span>€7,31</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Klanttracker / CRM</h4><div class="meta"><span>PDF</span><span>€8,79</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Klanttracker / CRM — NL</h4><div class="meta"><span>PDF</span><span>€6,27</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="ai" style="z-index:15;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">06 / 10</span>
+        <h2>AI-producten</h2>
+        <p>Promptbundels en toolkits — direct te gebruiken met ChatGPT en andere AI-tools.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> AI-prompts opslaan en hergebruiken kan uren per week besparen aan herhalend werk.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Prompts voor ondernemers</h4><div class="meta"><span>PDF</span><span>€5,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Prompts voor ondernemers — NL</h4><div class="meta"><span>PDF</span><span>€7,06</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Prompts voor ondernemers — EN</h4><div class="meta"><span>PDF</span><span>€8,17</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Prompts voor ondernemers — Pink</h4><div class="meta"><span>PDF</span><span>€6,28</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Prompts voor ondernemers — Minimalist</h4><div class="meta"><span>PDF</span><span>€7,39</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Prompts voor ondernemers — Student</h4><div class="meta"><span>PDF</span><span>€8,50</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Prompts voor ondernemers — Family</h4><div class="meta"><span>PDF</span><span>€6,61</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Prompts voor ondernemers — Business</h4><div class="meta"><span>PDF</span><span>€7,72</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Prompts voor studenten</h4><div class="meta"><span>PDF</span><span>€8,83</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Prompts voor studenten — NL</h4><div class="meta"><span>PDF</span><span>€6,94</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="canva" style="z-index:16;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">07 / 10</span>
+        <h2>Canva Templates</h2>
+        <p>Direct bewerkbare designs voor social media, marketing en branding.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Sjablonen met een vast kleurenpalet worden gemiddeld sneller af dan ontwerpen vanaf nul.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Instagram Post Set</h4><div class="meta"><span>PDF</span><span>€4,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Instagram Post Set — NL</h4><div class="meta"><span>PDF</span><span>€6,06</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Instagram Post Set — EN</h4><div class="meta"><span>PDF</span><span>€7,17</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Instagram Post Set — Pink</h4><div class="meta"><span>PDF</span><span>€5,28</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Instagram Post Set — Minimalist</h4><div class="meta"><span>PDF</span><span>€6,39</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Instagram Post Set — Student</h4><div class="meta"><span>PDF</span><span>€7,50</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Instagram Post Set — Family</h4><div class="meta"><span>PDF</span><span>€5,61</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Instagram Post Set — Business</h4><div class="meta"><span>PDF</span><span>€6,72</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Instagram Story Set</h4><div class="meta"><span>PDF</span><span>€7,83</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Instagram Story Set — NL</h4><div class="meta"><span>PDF</span><span>€5,94</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="notion" style="z-index:17;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">08 / 10</span>
+        <h2>Notion Templates</h2>
+        <p>All-in-one dashboards voor je leven, budget, fitness en business.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Eén centrale Notion-pagina als 'startpunt' vermindert het aantal keer dat je tussen apps wisselt.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Life Dashboard</h4><div class="meta"><span>PDF</span><span>€6,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Life Dashboard — NL</h4><div class="meta"><span>PDF</span><span>€8,06</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Life Dashboard — EN</h4><div class="meta"><span>PDF</span><span>€9,17</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Life Dashboard — Pink</h4><div class="meta"><span>PDF</span><span>€7,28</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Life Dashboard — Minimalist</h4><div class="meta"><span>PDF</span><span>€8,39</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Life Dashboard — Student</h4><div class="meta"><span>PDF</span><span>€9,50</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Life Dashboard — Family</h4><div class="meta"><span>PDF</span><span>€7,61</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Life Dashboard — Business</h4><div class="meta"><span>PDF</span><span>€8,72</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Budget Dashboard</h4><div class="meta"><span>PDF</span><span>€9,83</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Budget Dashboard — NL</h4><div class="meta"><span>PDF</span><span>€7,94</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="familie" style="z-index:18;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">09 / 10</span>
+        <h2>Kinderen &amp; Familie</h2>
+        <p>Beloningskaarten, huiswerkplanners en speurtochten voor het hele gezin.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Een gedeelde gezinskalender vermindert dubbele afspraken en vergeten verjaardagen aanzienlijk.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Beloningskaarten</h4><div class="meta"><span>PDF</span><span>€2,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Beloningskaarten — NL</h4><div class="meta"><span>PDF</span><span>€4,06</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Beloningskaarten — EN</h4><div class="meta"><span>PDF</span><span>€5,17</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Beloningskaarten — Pink</h4><div class="meta"><span>PDF</span><span>€3,28</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Beloningskaarten — Minimalist</h4><div class="meta"><span>PDF</span><span>€4,39</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Beloningskaarten — Student</h4><div class="meta"><span>PDF</span><span>€5,50</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Beloningskaarten — Family</h4><div class="meta"><span>PDF</span><span>€3,61</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Beloningskaarten — Business</h4><div class="meta"><span>PDF</span><span>€4,72</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Huiswerkplanner</h4><div class="meta"><span>PDF</span><span>€5,83</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Huiswerkplanner — NL</h4><div class="meta"><span>PDF</span><span>€3,94</span></div></div>
+    </div>
+  </section>
+
+  <section class="catsection" id="printables" style="z-index:19;">
+    <div class="catsection-head">
+      <div>
+        <span class="num">10 / 10</span>
+        <h2>Printables</h2>
+        <p>Posters, checklists en weekmenu's — print-ready in elke gewenste stijl.</p>
+      </div>
+        <div class="funfact">💡 <b>Wist je dat?</b> Printables die je laminaert en met een whiteboardstift gebruikt, gaan vrijwel onbeperkt mee.</div>
+      <span class="count">10 producten</span>
+    </div>
+    <div class="product-grid">
+
+<div class="pcard"><div class="thumb t-sage"></div><h4>Muurposter Set</h4><div class="meta"><span>PDF</span><span>€1,95</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Muurposter Set — NL</h4><div class="meta"><span>PDF</span><span>€3,06</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Muurposter Set — EN</h4><div class="meta"><span>PDF</span><span>€4,17</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Muurposter Set — Pink</h4><div class="meta"><span>PDF</span><span>€2,28</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Muurposter Set — Minimalist</h4><div class="meta"><span>PDF</span><span>€3,39</span></div></div>
+<div class="pcard"><div class="thumb t-sage"></div><h4>Muurposter Set — Student</h4><div class="meta"><span>PDF</span><span>€4,50</span></div></div>
+<div class="pcard"><div class="thumb t-clay"></div><h4>Muurposter Set — Family</h4><div class="meta"><span>PDF</span><span>€2,61</span></div></div>
+<div class="pcard"><div class="thumb t-sand"></div><h4>Muurposter Set — Business</h4><div class="meta"><span>PDF</span><span>€3,72</span></div></div>
+<div class="pcard"><div class="thumb t-ink"></div><h4>Quotes Posters</h4><div class="meta"><span>PDF</span><span>€4,83</span></div></div>
+<div class="pcard"><div class="thumb t-sagedeep"></div><h4>Quotes Posters — NL</h4><div class="meta"><span>PDF</span><span>€2,94</span></div></div>
+    </div>
+  </section>
+
+  <section class="system">
+    <h2>Eén ontwerp, <span class="accent">honderd</span> producten.</h2>
+    <div class="system-steps">
+      <div class="step"><div class="n">STAP 01</div><h4>Basisontwerp</h4><p>Eén sterke planner of journal — de blauwdruk voor de hele lijn.</p></div>
+      <div class="step"><div class="n">STAP 02</div><h4>Kleurvarianten</h4><p>Tot 20 kleurstellingen, van minimalistisch tot pastel.</p></div>
+      <div class="step"><div class="n">STAP 03</div><h4>Doelgroepvarianten</h4><p>Voor studenten, gezinnen, ondernemers of specifieke doelen.</p></div>
+      <div class="step"><div class="n">STAP 04</div><h4>Taalvarianten</h4><p>Nederlands, Engels en op aanvraag meer talen.</p></div>
+    </div>
+    <div class="system-result">
+      <div class="big">1 → 100</div>
+      <p>Eén budgetplanner wordt zo de Budget Planner NL, EN, Pink, Minimalist, Student, Family en Business edition.</p>
+    </div>
+  </section>
+
+  <section class="system" style="padding:90px 5vw;">
+    <h2>Wist je dat?<span class="accent"> 4 weetjes</span> over plannen</h2>
+    <div class="system-steps">
+      <div class="step"><div class="n">WEETJE 01</div><h4>Schrijven werkt</h4><p>Mensen die hun doelen op papier zetten, behalen ze tot 42% vaker dan mensen die dat niet doen.</p></div>
+      <div class="step"><div class="n">WEETJE 02</div><h4>De 2-minutenregel</h4><p>Een taak die je in 2 minuten kunt afronden, kun je beter direct doen dan opschrijven.</p></div>
+      <div class="step"><div class="n">WEETJE 03</div><h4>Zondag-effect</h4><p>Plannen op zondagavond verlaagt de stress van de maandagochtend aanzienlijk.</p></div>
+      <div class="step"><div class="n">WEETJE 04</div><h4>Kleur helpt</h4><p>Kleurgecodeerde planners verbeteren je herinnering en overzicht tot wel 30%.</p></div>
+    </div>
+  </section>
+
+  <section class="pricing">
+    <div class="pricing-head">
+      <span class="num">LIDMAATSCHAP</span>
+      <h2>Koop los, of krijg toegang tot alles.</h2>
+    </div>
+    <div class="pricing-grid">
+      <div class="plan">
+        <h3>Los product</h3>
+        <p class="desc">Eén planner, journal of template naar keuze.</p>
+        <div class="price">€4,95 <span>/ stuk</span></div>
+        <ul>
+          <li>Direct downloaden na aankoop</li>
+          <li>Levenslang te gebruiken</li>
+          <li>PDF + Notion/Canva-link</li>
+        </ul>
+        <a href="#" class="btn">Bekijk producten</a>
+      </div>
+      <div class="plan featured">
+        <h3>Indexa+ lidmaatschap</h3>
+        <p class="desc">Onbeperkt toegang tot de volledige catalogus.</p>
+        <div class="price">€9,95 <span>/ maand</span></div>
+        <ul>
+          <li>Toegang tot alle 100 producten</li>
+          <li>Elke maand nieuwe releases</li>
+          <li>Alle kleur- en taalvarianten</li>
+          <li>Opzegbaar wanneer je wilt</li>
+        </ul>
+        <a href="#" class="btn">Word lid</a>
+      </div>
+      <div class="plan">
+        <h3>Jaarlidmaatschap</h3>
+        <p class="desc">Hetzelfde als Indexa+, twee maanden gratis.</p>
+        <div class="price">€89 <span>/ jaar</span></div>
+        <ul>
+          <li>Alles uit Indexa+</li>
+          <li>Gelijk aan €7,42 / maand</li>
+          <li>Eén keer per jaar afrekenen</li>
+        </ul>
+        <a href="#" class="btn">Kies jaarplan</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <h2>Klaar voor meer overzicht?</h2>
+    <div class="footer-bottom">
+      <span>INDEXA — DIGITALE PLANNERS &amp; TEMPLATES</span>
+      <span>ONTWORPEN DOOR LUCA · ZWOLLE, NL</span>
+      <span>CONTACT@INDEXA.SHOP</span>
+    </div>
+  </footer>
+
+  <script>
+    // --- Actieve nav-link bij scrollen ---
+    const navLinks = document.querySelectorAll('.catnav a');
+    const sections = [...navLinks].map(a => document.querySelector(a.getAttribute('href')));
+    const setActive = () => {
+      const pos = window.scrollY + 160;
+      let current = sections[0];
+      sections.forEach(sec => { if (sec && sec.offsetTop <= pos) current = sec; });
+      navLinks.forEach(a => a.classList.toggle('active', document.querySelector(a.getAttribute('href')) === current));
+    };
+    window.addEventListener('scroll', setActive, {passive:true});
+    setActive();
+
+    // --- Toast helper ---
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> toast.classList.remove('show'), 1800);
+    }
+
+    // --- Mandje ---
+    const bag = document.getElementById('bag');
+    let cartCount = 0;
+    function updateBag(){ bag.textContent = `Mandje (${cartCount})`; }
+
+    // --- Klikbare productkaarten ---
+    document.querySelectorAll('.pcard').forEach(card => {
+      card.addEventListener('click', () => {
+        const name = card.querySelector('h4')?.textContent || 'Product';
+        cartCount++;
+        updateBag();
+        showToast(`Toegevoegd aan mandje: ${name}`);
+      });
+    });
+
+    // --- Mandje openen ---
+    bag.addEventListener('click', () => {
+      showToast(cartCount === 0 ? 'Je mandje is nog leeg' : `Je hebt ${cartCount} item(s) in je mandje`);
+    });
+
+    // --- Print knop ---
+    document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+    // --- Zoekbalk ---
+    const searchToggle = document.getElementById('searchToggle');
+    const searchBar = document.getElementById('searchBar');
+    const searchInput = document.getElementById('searchInput');
+    searchToggle.addEventListener('click', () => {
+      searchBar.classList.toggle('open');
+      if (searchBar.classList.contains('open')) searchInput.focus();
+    });
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      document.querySelectorAll('.catsection').forEach(sec => {
+        let visible = 0;
+        const cards = sec.querySelectorAll('.pcard');
+        cards.forEach(card => {
+          const name = card.querySelector('h4').textContent.toLowerCase();
+          const match = name.includes(q);
+          card.classList.toggle('hidden', !match);
+          if (match) visible++;
+        });
+        const count = sec.querySelector('.count');
+        if (count){
+          count.textContent = q ? `${visible} resultaat${visible===1?'':'en'}` : '10 producten';
+          count.classList.toggle('no-results', q && visible === 0);
+        }
+      });
+    });
+
+    // --- Pricing knoppen ---
+    document.querySelectorAll('.pricing .btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showToast(`"${btn.textContent.trim()}" — binnenkort beschikbaar!`);
+      });
+    });
+  </script>
+</body>
+</html>
